@@ -52,6 +52,14 @@ export default defineConfig({
 
 字体名对应 figlet 包内 `fonts/*.flf` 的文件名（去掉扩展名）。未知字体会在构建期抛出错误，不会静默回退到默认字体。
 
+## 灵感
+
+- [vite-plugin-figlet](https://github.com/leifarriens/vite-plugin-figlet)
+- See all [configurable options](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/figlet/index.d.ts).
+
 ## 许可
 
-[MIT](./LICENSE)
+[MIT](./LICENSE) License &copy; 2026-PRESENT [xmasuhai](https://github.com/xmasuhai)
+
+---
+---
