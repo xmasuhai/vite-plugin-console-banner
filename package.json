@@ -11,6 +11,10 @@
     "console",
     "banner"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xmasuhai/vite-plugin-console-banner"
+  },
   "type": "module",
   "scripts": {
     "build": "tsc"
