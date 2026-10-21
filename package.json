@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-console-banner",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "在浏览器控制台打印 figlet ASCII Art 横幅和链接标签的 Vite 插件",
   "author": "xmasuhai",
   "license": "MIT",
