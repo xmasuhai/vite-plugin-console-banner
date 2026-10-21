@@ -1,0 +1,19 @@
+{
+  "name": "vite-plugin-console-banner",
+  "version": "0.0.1",
+  "description": "在项目控制台输出banner",
+  "author": "xmasuhai",
+  "license": "MIT",
+  "main": "dist/index.ts",
+  "keywords": ["vite", "plugin", "console", "banner"],
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "7.0.2"
+  },
+  "private": false,
+  "packageManager": "pnpm@12.14.0"
+}
