@@ -68,6 +68,11 @@ export interface ConsoleBannerBadge {
 }
 
 export interface ConsoleBannerOptions {
+  /**
+   * 是否开启横幅打印，默认 true。
+   * 支持传入布尔值或返回布尔值的函数（支持异步函数），用于自定义展示信息的时机（例如仅在生产环境开启）。
+   */
+  enable?: boolean | (() => boolean | Promise<boolean>);
   /** ASCII Art 显示的文本，默认 'Hello' */
   text?: string;
   /**
@@ -89,6 +94,7 @@ export interface ConsoleBannerOptions {
  * @example
  * ```ts
  * consoleBanner({
+ *   enable: process.env.NODE_ENV === "production",
  *   text: "xmasuhai.xyz",
  *   font: "big",
  *   badges: [
@@ -99,17 +105,39 @@ export interface ConsoleBannerOptions {
  * ```
  */
 export function consoleBanner(options: ConsoleBannerOptions = {}): Plugin {
-  const { text = "Hello", font = "ANSI Shadow", color = "#476EE3", badges = [] } = options;
+  const {
+    enable = true,
+    text = "Hello",
+    font = "ANSI Shadow",
+    color = "#476EE3",
+    badges = [],
+  } = options;
 
   let asciiArt = "";
+
+  const isEnabled = async (): Promise<boolean> => {
+    if (typeof enable === "function") {
+      return await enable();
+    }
+    return enable;
+  };
 
   return {
     name: "vite-plugin-console-banner",
     enforce: "post",
-    buildStart() {
+    async buildStart() {
+      if (!(await isEnabled())) {
+        return;
+      }
       asciiArt = renderAsciiArt(text, font);
     },
-    transformIndexHtml() {
+    async transformIndexHtml() {
+      if (!(await isEnabled())) {
+        return;
+      }
+      if (!asciiArt) {
+        asciiArt = renderAsciiArt(text, font);
+      }
       const currentYear = new Date().getFullYear();
       const badgeStatements = badges
         .map((badge) => {

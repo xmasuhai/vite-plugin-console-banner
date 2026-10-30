@@ -25,6 +25,7 @@ import { consoleBanner } from "vite-plugin-console-banner";
 export default defineConfig({
   plugins: [
     consoleBanner({
+      enable: process.env.NODE_ENV === "production", // 自定义开启时机（支持 boolean 或函数）
       text: "xmasuhai.xyz",
       font: "big", // 大小写不敏感，也可用 "Big"、"ANSI Shadow"
       color: "#476EE3",
@@ -39,16 +40,17 @@ export default defineConfig({
 
 ## 选项
 
-| 选项               | 类型      | 默认值          | 说明                                     |
-|--------------------|-----------|-----------------|------------------------------------------|
-| `text`             | `string`  | `"Hello"`       | ASCII Art 文本                           |
-| `font`             | `string`  | `"ANSI Shadow"` | figlet 内置字体名，大小写不敏感          |
-| `color`            | `string`  | `"#476EE3"`     | ASCII Art 的 CSS 颜色                    |
-| `badges`           | `Badge[]` | `[]`            | 横幅下方的控制台标签                     |
-| `badges[].label`   | `string`  | -               | 标签文字，`${year}` 会替换为构建时的年份 |
-| `badges[].url`     | `string`  | -               | 标签链接                                 |
-| `badges[].labelBg` | `string`  | `"#42b883"`     | 标签背景色                               |
-| `badges[].urlBg`   | `string`  | `"#35495e"`     | 链接背景色                               |
+| 选项               | 类型                                             | 默认值          | 说明                                     |
+|--------------------|--------------------------------------------------|-----------------|------------------------------------------|
+| `enable`           | `boolean \| (() => boolean \| Promise<boolean>)` | `true`          | 是否启用横幅，支持布尔值或函数以自定义展示时机 |
+| `text`             | `string`                                         | `"Hello"`       | ASCII Art 文本                           |
+| `font`             | `string`                                         | `"ANSI Shadow"` | figlet 内置字体名，大小写不敏感          |
+| `color`            | `string`                                         | `"#476EE3"`     | ASCII Art 的 CSS 颜色                    |
+| `badges`           | `Badge[]`                                        | `[]`            | 横幅下方的控制台标签                     |
+| `badges[].label`   | `string`                                         | -               | 标签文字，`${year}` 会替换为构建时的年份 |
+| `badges[].url`     | `string`                                         | -               | 标签链接                                 |
+| `badges[].labelBg` | `string`                                         | `"#42b883"`     | 标签背景色                               |
+| `badges[].urlBg`   | `string`                                         | `"#35495e"`     | 链接背景色                               |
 
 字体名对应 figlet 包内 `fonts/*.flf` 的文件名（去掉扩展名）。未知字体会在构建期抛出错误，不会静默回退到默认字体。
 

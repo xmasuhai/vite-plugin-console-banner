@@ -7,13 +7,16 @@ import type { HtmlTagDescriptor, IndexHtmlTransformResult, Plugin } from "vite";
 import { describe, expect, it } from "vitest";
 import { consoleBanner, type ConsoleBannerOptions } from "./index";
 
-async function render(options?: ConsoleBannerOptions): Promise<string> {
+async function render(options?: ConsoleBannerOptions): Promise<string | undefined> {
   const plugin = consoleBanner(options) as Plugin & {
     buildStart: () => void | Promise<void>;
     transformIndexHtml: () => IndexHtmlTransformResult | Promise<IndexHtmlTransformResult>;
   };
   await plugin.buildStart();
   const result = await plugin.transformIndexHtml();
+  if (!result) {
+    return undefined;
+  }
   const tag = (result as HtmlTagDescriptor[])[0];
   if (!tag || typeof tag.children !== "string") {
     throw new Error("missing injected script");
@@ -35,11 +38,11 @@ function captureLogs(script: string): unknown[][] {
 
 describe("consoleBanner", () => {
   it("loads figlet fonts case-insensitively and keeps the ANSI Shadow default", async () => {
-    const defaults = captureLogs(await render());
-    const shadow = captureLogs(await render({ font: "ANSI Shadow" }));
-    const shadowLower = captureLogs(await render({ font: "ansi shadow" }));
-    const big = captureLogs(await render({ font: "big" }));
-    const bigCanonical = captureLogs(await render({ font: "Big" }));
+    const defaults = captureLogs((await render())!);
+    const shadow = captureLogs((await render({ font: "ANSI Shadow" }))!);
+    const shadowLower = captureLogs((await render({ font: "ansi shadow" }))!);
+    const big = captureLogs((await render({ font: "big" }))!);
+    const bigCanonical = captureLogs((await render({ font: "Big" }))!);
 
     expect(defaults[0]?.[0]).toBe(shadow[0]?.[0]);
     expect(shadowLower[0]?.[0]).toBe(shadow[0]?.[0]);
@@ -59,7 +62,7 @@ describe("consoleBanner", () => {
   it("prints badges, replaces ${year}, and keeps quotes executable", async () => {
     const year = String(new Date().getFullYear());
     const logs = captureLogs(
-      await render({
+      (await render({
         text: "Hi",
         color: "#ff00aa",
         badges: [
@@ -70,7 +73,7 @@ describe("consoleBanner", () => {
             urlBg: "#222",
           },
         ],
-      }),
+      }))!,
     );
 
     expect(String(logs[0]?.[1])).toContain("color: #ff00aa");
@@ -81,13 +84,40 @@ describe("consoleBanner", () => {
   });
 
   it("does not let badge text close the injected script tag", async () => {
-    const script = await render({
+    const script = (await render({
       badges: [{ label: "</script><script>alert(1)", url: "https://example.com?a=1&b=2" }],
-    });
+    }))!;
 
     expect(script).not.toContain("</script>");
     const logs = captureLogs(script);
     expect(String(logs[1]?.[0])).toContain("</script><script>alert(1)");
+  });
+
+  it("supports boolean enable option to control banner injection", async () => {
+    const enabledScript = await render({ enable: true });
+    expect(enabledScript).toBeDefined();
+
+    const disabledScript = await render({ enable: false });
+    expect(disabledScript).toBeUndefined();
+  });
+
+  it("supports sync and async function for enable option", async () => {
+    const syncEnabled = await render({ enable: () => true });
+    expect(syncEnabled).toBeDefined();
+
+    const syncDisabled = await render({ enable: () => false });
+    expect(syncDisabled).toBeUndefined();
+
+    const asyncEnabled = await render({ enable: async () => true });
+    expect(asyncEnabled).toBeDefined();
+
+    const asyncDisabled = await render({ enable: async () => false });
+    expect(asyncDisabled).toBeUndefined();
+  });
+
+  it("does not throw font errors when enable is false", async () => {
+    await expect(render({ enable: false, font: "not-a-font" })).resolves.toBeUndefined();
+    await expect(render({ enable: () => false, font: "not-a-font" })).resolves.toBeUndefined();
   });
 
   it("injects the Big font banner into the built index.html", async () => {
@@ -121,8 +151,37 @@ describe("consoleBanner", () => {
       expect(script).toBeTruthy();
 
       const built = captureLogs(script ?? "");
-      const direct = captureLogs(await render({ text: "xmasuhai", font: "Big" }));
+      const direct = captureLogs((await render({ text: "xmasuhai", font: "Big" }))!);
       expect(built[0]?.[0]).toBe(direct[0]?.[0]);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it("does not inject banner into the built index.html when enable is false", async () => {
+    const root = await mkdtemp(join(tmpdir(), "vite-plugin-console-banner-"));
+    try {
+      await writeFile(
+        join(root, "index.html"),
+        "<!doctype html><html lang=\"zh-CN\"><head><title>t</title></head><body></body></html>",
+      );
+      await build({
+        root,
+        configFile: false,
+        logLevel: "error",
+        plugins: [
+          consoleBanner({
+            enable: false,
+            text: "xmasuhai",
+            font: "big",
+            badges: [{ label: "徐帅${year}简历", url: "https://xmasuhai.xyz/my-latest-resume/" }],
+          }),
+        ],
+      });
+
+      const html = await readFile(join(root, "dist", "index.html"), "utf8");
+      expect(html).not.toContain("xmasuhai");
+      expect(html).not.toContain("console.log");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
