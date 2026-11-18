@@ -92,6 +92,8 @@ npm publish
 
 ## 更新 npm 包版本，并重新发布
 
+- 确保所有变更都已提交
+
 ```bash
 # 自动更改版本号并且commit
 # npm version xxx
