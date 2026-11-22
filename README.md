@@ -76,6 +76,8 @@ npm config get registry
 npm config set registry https://registry.npmjs.org/
 # 使用 nrm 切换源
 nrm use npm
+# 最后恢复源
+nrm use taobao
 ```
 
 ## 登录
