@@ -2,3 +2,4 @@ allowBuilds:
   esbuild: true
 minimumReleaseAgeExclude:
   - vite@8.3.5 || 8.3.6
+  - figlet@1.13.0
