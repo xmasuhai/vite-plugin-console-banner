@@ -42,7 +42,9 @@
     "build": "tsup && tsc -p tsconfig.build.json",
     "dev": "tsup --watch",
     "test": "vitest run",
-    "prepublishOnly": "pnpm run build && pnpm run test"
+    "prepublishOnly": "pnpm run build && pnpm run test",
+    "release": "node scripts/publish.mjs",
+    "release:dry": "node scripts/publish.mjs --dry-run"
   },
   "peerDependencies": {
     "figlet": "^1.12.0",
