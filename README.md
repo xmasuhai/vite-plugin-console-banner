@@ -65,59 +65,51 @@ export default defineConfig({
 
 ---
 
-## 项目开发 npm 发布
+## 发布流程
 
-- 需要临时设置为npm默认源
+### 1. 脚本自动发布（推荐）
+
+- 通过 [`scripts/publish.mjs`](./scripts/publish.mjs) 自动执行
+  - **Git 工作区检查 → 临时切换 npm 官方源 → 登录态验证 → 构建与测试 → 默认升级补丁版本（`patch`）→ 发布 npm 包 → 自动恢复原镜像源**：
 
 ```bash
-# 查看npm镜像源地址
+# 演练预检（校验构建、测试与打包清单，不修改版本号、不实际发布）
+pnpm run release:dry
+
+# 默认升级补丁版本（patch）并发布
+pnpm run release
+
+# 指定版本升级类型、自动推送 Git 标签或传入 2FA 验证码
+node scripts/publish.mjs minor --push
+node scripts/publish.mjs patch --otp=123456
+```
+
+> 也可参考 [`prompts/publish-npm.md`](./prompts/publish-npm.md) 提示词，借助 AI 助手按步骤引导发布。
+
+### 2. 手动发布步骤
+
+1. **检查工作区与校验**：确保所有 Git 变更已提交，执行 `pnpm run build && pnpm run test`。
+2. **临时切换 npm 官方源并验证登录**：
+
+```bash
 npm config get registry
-# 切换npm镜像源 设置npm默认源
-npm config set registry https://registry.npmjs.org/
-# 使用 nrm 切换源
-nrm use npm
-# 最后恢复源
-nrm use taobao
+npm config set registry https://registry.npmjs.org/ # 或 nrm use npm
+npm login # 已登录可通过 npm whoami 验证
 ```
 
-## 登录
+3. **升级版本号并发布**：
 
 ```bash
-npm login
-```
-
-## 运行发布命令
-
-```bash
+# patch（补丁 0.1.0 -> 0.1.1）| minor（次版本 0.1.0 -> 0.2.0）| major（主版本 0.1.0 -> 1.0.0）
+npm version patch
 npm publish
 ```
 
-## 更新 npm 包版本，并重新发布
-
-- 确保所有变更都已提交
+4. **恢复镜像源并推送代码**：
 
 ```bash
-# 自动更改版本号并且commit
-# npm version xxx
-
-# 控制台会返回下一个小版本号 如v1.0.1
-npm version patch
-
-# 重新发布
-npm publish
-```
-
-### npm 版本号
-
-```bash
-# patch：补丁号，修复bug，小变动，如 v1.0.0->v1.0.1
-npm version patch
-
-# minor：次版本号，增加新功能，如 v1.0.0->v1.1.0
-npm version minor
-
-# major：主版本号，不兼容的修改，如 v1.0.0->v2.0.0
-npm version major
+npm config set registry https://registry.npmmirror.com/ # 或 nrm use taobao
+git push && git push --tags
 ```
 
 ---
